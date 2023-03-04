@@ -7,8 +7,8 @@ main.py
 Author:
 Nilusink
 """
+from ui import RunFrame, SettingsFrame
 import customtkinter as ctk
-from ui import RunFrame
 import typing as tp
 import json
 import os
@@ -74,27 +74,49 @@ class Window(ctk.CTk):
 
         self.title("BotUI")
         self.attributes("-fullscreen", WINDOW_CONFIG["fullscreen"])
+        self.minsize(500, 300)
 
         # ui layout
         self.grid_columnconfigure((0, 1), weight=1)
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=1)
 
-        ctk.CTkSegmentedButton(
+        sb = ctk.CTkSegmentedButton(
             self,
             values=["Run", "Settings"],
-            command=self._change_frame
-        ).grid(row=0, column=0)
+            font=("Sans-Serif", 30),
+            command=self._change_frame,
+        )
+        sb._select_button_by_value("Run")
+        sb.grid(row=0, column=0, padx=10)
+
+        ctk.CTkButton(
+            self,
+            text="Quit",
+            fg_color="#aa3333",
+            hover_color="#ff0000",
+            command=self.end,
+            font=("Sans-Serif", 30)
+        ).grid(row=0, column=1)
 
         # ctk.CTkLabel(self, text="Run Program", font=("Sans-Serif", 36, "bold")).grid(row=0, column=0, sticky="nsew")
 
         self.programs_frame = RunFrame(WINDOW_CONFIG, self, corner_radius=30)
-        self.programs_frame.grid(row=1, column=0, padx=30, pady=30, sticky="nsew", columnspan=2)
+        self.settings_frame = SettingsFrame(WINDOW_CONFIG, CONFIG_PAH, self, corner_radius=30)
+
+        self._change_frame("Run")
 
     def _change_frame(self, value: tp.Literal["Run", "Settings"]) -> None:
         """
         change the currently displayed frame
         """
+        if value == "Run":
+            self.settings_frame.grid_forget()
+            self.programs_frame.grid(row=1, column=0, padx=30, pady=30, sticky="nsew", columnspan=2)
+
+        elif value == "Settings":
+            self.programs_frame.grid_forget()
+            self.settings_frame.grid(row=1, column=0, padx=30, pady=30, sticky="nsew", columnspan=2)
 
     def mainloop(self) -> None:
         """
@@ -105,11 +127,14 @@ class Window(ctk.CTk):
             super().update_idletasks()
             super().update()
 
-    def end(self) -> None:
+    def end(self, *_trash) -> None:
         """
         close the program
         """
+        self.running = False
         self.programs_frame.end()
+        self.destroy()
+        exit(0)
 
 
 if __name__ == '__main__':

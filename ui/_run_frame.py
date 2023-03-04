@@ -7,15 +7,6 @@ Frame shown when "run" is selected
 Author:
 Nilusink
 """
-"""
-main.py
-04. March 2023
-
-<description>
-
-Author:
-Nilusink
-"""
 from concurrent.futures import ThreadPoolExecutor
 from subprocess import Popen, PIPE
 from traceback import format_exc
@@ -47,7 +38,7 @@ class RunFrame(ctk.CTkFrame):
     _program_running: bool = False
     _to_insert: list[str] = ...
 
-    def __init__(self, window_config, *args, **kwargs) -> None:
+    def __init__(self, window_config: WindowConfig, *args, **kwargs) -> None:
         # threads
         self._pool = ThreadPoolExecutor(max_workers=1)
         self._pool.submit(self._stdout_update)
@@ -79,19 +70,7 @@ class RunFrame(ctk.CTkFrame):
         self.program_button.grid(row=0, column=1, sticky="ew", padx=30, pady=10)
 
         # place programs
-        for program_dir in window_config["program_directories"]:
-            if os.path.exists(program_dir):
-                for directory in os.listdir(program_dir):
-                    program_name = directory.split("/")[-1]
-                    program_path = program_dir + "/" + directory
-
-                    self.programs[program_name] = program_path
-
-                    if self._selected_program is None:
-                        self._selected_program = program_path
-
-            else:
-                print(f"directory doesnt' exist: \"{program_dir}\"")
+        self.update_programs()
 
         self.programs_combo = ctk.CTkComboBox(
             self,
@@ -104,6 +83,30 @@ class RunFrame(ctk.CTkFrame):
 
         self.std_out = ctk.CTkTextbox(self, font=("Sans-Serif", 20))
         self.std_out.grid(row=1, column=0, sticky="nsew", padx=20, pady=20, columnspan=2)
+
+    def update_programs(self) -> bool:
+        """
+        update shown programs
+        :return: True if new programs
+        """
+        changed = False
+        for program_dir in self.window_config["program_directories"]:
+            if os.path.exists(program_dir):
+                for directory in os.listdir(program_dir):
+                    program_name = directory.split("/")[-1]
+                    program_path = program_dir + "/" + directory
+
+                    if program_name not in self.programs:
+                        changed = True
+                        self.programs[program_name] = program_path
+
+                        if self._selected_program is None:
+                            self._selected_program = program_path
+
+            else:
+                print(f"directory doesnt' exist: \"{program_dir}\"")
+
+        return changed
 
     def _select_program(self, value: str) -> None:
         """
@@ -150,6 +153,9 @@ class RunFrame(ctk.CTkFrame):
             raise
 
     def update(self) -> None:
+        if self.update_programs():
+            self.programs_combo.configure(values=list(self.programs.keys()))
+
         tmp = self._to_insert.copy()
         self._to_insert.clear()
         for line in tmp:
@@ -163,5 +169,5 @@ class RunFrame(ctk.CTkFrame):
         """
         close the program
         """
+        self.running = False
         self._kill_program()
-        _ = self._running_program.wait()
