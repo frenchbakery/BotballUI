@@ -138,7 +138,7 @@ class RunFrame(ctk.CTkFrame):
         try:
             while self.running:
                 if self._running_program is not None:
-                    self._program_running = self._program_running = self._running_program.poll() is None
+                    self._program_running = self._running_program.poll() is None
 
                     if self._program_running:
                         line = self._running_program.stdout.readline().strip()
