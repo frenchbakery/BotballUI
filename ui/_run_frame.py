@@ -141,10 +141,10 @@ class RunFrame(ctk.CTkFrame):
                     self._program_running = self._running_program.poll() is None
 
                     if self._program_running:
-                        line = self._running_program.stdout.readline().strip()
+                        line = self._running_program.stdout.read(1)
 
                         if line:
-                            self._to_insert.append(line.decode("utf-8") + "\n")
+                            self._to_insert.append(line.decode("utf-8"))
 
                 sleep(.02)
 
