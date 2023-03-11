@@ -8,7 +8,7 @@ Author:
 Nilusink
 """
 from concurrent.futures import ThreadPoolExecutor
-from._term_box import TermBox
+from ._term_box import TermBox
 import customtkinter as ctk
 import typing as tp
 import os
@@ -58,7 +58,13 @@ class RunFrame(ctk.CTkFrame):
             height=100,
             width=300,
         )
-        self.program_button.grid(row=0, column=1, sticky="ew", padx=30, pady=10)
+        self.program_button.grid(
+            row=0,
+            column=1,
+            sticky="ew",
+            padx=30,
+            pady=10
+        )
 
         # place programs
         self.update_programs()
@@ -73,7 +79,14 @@ class RunFrame(ctk.CTkFrame):
         self.programs_combo.grid(row=0, column=0, sticky="ew", padx=30)
 
         self.std_out = TermBox(self, font=("Sans-Serif", 20))
-        self.std_out.grid(row=1, column=0, sticky="nsew", padx=20, pady=20, columnspan=2)
+        self.std_out.grid(
+            row=1,
+            column=0,
+            sticky="nsew",
+            padx=20,
+            pady=20,
+            columnspan=2
+        )
 
     def update_programs(self) -> bool:
         """
@@ -112,7 +125,9 @@ class RunFrame(ctk.CTkFrame):
         run a program
         """
         if self._selected_program is not None:
-            self._running_program = self.std_out.run_program(self._selected_program + "/run/main")
+            self._running_program = self.std_out.run_program(
+                self._selected_program + "/run/main"
+            )
 
     def _kill_program(self, *_trash) -> None:
         """
@@ -125,9 +140,16 @@ class RunFrame(ctk.CTkFrame):
             self.programs_combo.configure(values=list(self.programs.keys()))
 
         self.std_out.update()
-        self.program_button.configure(text="Kill" if self.std_out.program_running else "Start")
-        self.program_button.configure(fg_color="#aa3333" if self.std_out.program_running else "#3a7ebf")
-        self.program_button.configure(command=self._kill_program if self.std_out.program_running else self._run_program)
+        self.program_button.configure(
+            text="Kill" if self.std_out.program_running else "Start"
+        )
+        self.program_button.configure(
+            fg_color="#aa3333" if self.std_out.program_running else "#3a7ebf"
+        )
+        self.program_button.configure(
+            command=self._kill_program if self.std_out.program_running
+            else self._run_program
+        )
 
     def end(self) -> None:
         """

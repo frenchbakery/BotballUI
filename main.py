@@ -101,10 +101,13 @@ class Window(ctk.CTk):
             font=("Sans-Serif", 30)
         ).grid(row=0, column=1)
 
-        # ctk.CTkLabel(self, text="Run Program", font=("Sans-Serif", 36, "bold")).grid(row=0, column=0, sticky="nsew")
-
         self.programs_frame = RunFrame(WINDOW_CONFIG, self, corner_radius=30)
-        self.settings_frame = SettingsFrame(WINDOW_CONFIG, CONFIG_PAH, self, corner_radius=30)
+        self.settings_frame = SettingsFrame(
+            WINDOW_CONFIG,
+            CONFIG_PAH,
+            self,
+            corner_radius=30
+        )
 
         self._change_frame("Run")
 
@@ -114,11 +117,25 @@ class Window(ctk.CTk):
         """
         if value == "Run":
             self.settings_frame.grid_forget()
-            self.programs_frame.grid(row=1, column=0, padx=30, pady=30, sticky="nsew", columnspan=2)
+            self.programs_frame.grid(
+                row=1,
+                column=0,
+                padx=30,
+                pady=30,
+                sticky="nsew",
+                columnspan=2
+            )
 
         elif value == "Settings":
             self.programs_frame.grid_forget()
-            self.settings_frame.grid(row=1, column=0, padx=30, pady=30, sticky="nsew", columnspan=2)
+            self.settings_frame.grid(
+                row=1,
+                column=0,
+                padx=30,
+                pady=30,
+                sticky="nsew",
+                columnspan=2
+            )
 
     def mainloop(self) -> None:
         """

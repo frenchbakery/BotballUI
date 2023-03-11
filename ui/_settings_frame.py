@@ -24,7 +24,13 @@ class SettingsFrame(ctk.CTkFrame):
     window_config: WindowConfig = ...
     config_path: str = ...
 
-    def __init__(self, window_config: WindowConfig, config_path: str, *args, **kwargs) -> None:
+    def __init__(
+            self,
+            window_config: WindowConfig,
+            config_path: str,
+            *args,
+            **kwargs
+    ) -> None:
         self.window_config = window_config
         self.config_path = config_path
 
@@ -115,7 +121,10 @@ class SettingsFrame(ctk.CTkFrame):
         ctk.set_appearance_mode(value)
         self.update_config()
 
-    def update_theme(self, value: tp.Literal["dark-blue", "blue", "green"]) -> None:
+    def update_theme(
+            self,
+            value: tp.Literal["dark-blue", "blue", "green"]
+    ) -> None:
         """
         update the appearance variable
         :param value: new appearance
@@ -138,5 +147,3 @@ class SettingsFrame(ctk.CTkFrame):
         """
         with open(self.config_path, "w") as out:
             json.dump(self.window_config, out, indent=4)
-
-

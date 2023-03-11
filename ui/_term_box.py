@@ -7,9 +7,9 @@ A tkinter texbox, but also a terminal
 Author:
 Nilusink
 """
+from ._tk_term_colors import SIMPLE_COLORS, read_color_code
 from concurrent.futures import ThreadPoolExecutor
 from traceback import format_exc
-from ._tk_term_colors import *
 import customtkinter as ctk
 from time import sleep
 import typing as tp
@@ -35,7 +35,12 @@ class TermBox(ctk.CTkTextbox):
     _control_keys: ControlKeys = ...
     running = True
 
-    def __init__(self, *args, proc: tp.Union[subprocess.Popen, None] = None, **kwargs):
+    def __init__(
+            self,
+            *args,
+            proc: tp.Union[subprocess.Popen, None] = None,
+            **kwargs
+    ):
         self._running_program = proc
         self._to_insert: list[tuple[str, str]] = []
         self._err_to_insert: list[tuple[str, str]] = []
@@ -84,10 +89,9 @@ class TermBox(ctk.CTkTextbox):
         elif event.keysym.lower() == "return":
             print(b"\x0d\x0a".decode(), end="")
             self._running_program.stdin.write(b"\x0a\x20")  # cr + lf
-            # self._running_program.stdin.write("\n".encode())  # cr + lf
 
         elif event.keysym.lower() == "backspace":
-            print(b"\x08".decode(), end="")        # elif event.keysym.lower() == "return":
+            print(b"\x08".decode(), end="")
             self._running_program.stdin.write(b"\x08")
 
         elif event.keysym.lower() == "space":
@@ -129,29 +133,48 @@ class TermBox(ctk.CTkTextbox):
         try:
             while self.running:
                 if self._running_program is not None:
-                    self._program_running = self._running_program.poll() is None
+                    self._program_running = \
+                        self._running_program.poll() is None
 
                     byte_char = self._running_program.stdout.read(1)
                     if byte_char:
                         if byte_char[0] == 27:  # font control character
-                            curr_tag = read_color_code(self._running_program.stdout)
+                            curr_tag = read_color_code(
+                                self._running_program.stdout
+                            )
                             continue
 
-                        self._to_insert.append((byte_char.decode("utf-8"), curr_tag))
+                        self._to_insert.append((
+                            byte_char.decode("utf-8"),
+                            curr_tag
+                        ))
                         continue
 
-                    # only read error messages when there is no stdout to read anymore
+                    # only read error messages when
+                    # there is no stdout to read anymore
                     err_char = self._running_program.stderr.read(1)
                     if err_char:
-                        self._err_to_insert.append((err_char.decode("utf-8"), SIMPLE_COLORS["red"][0]))
+                        self._err_to_insert.append(
+                            (
+                                err_char.decode("utf-8"),
+                                SIMPLE_COLORS["red"][0]
+                            )
+                        )
 
                         # read until nothing more to read
                         while err_char := self._running_program.stderr.read(1):
-                            self._err_to_insert.append((err_char.decode("utf-8"), SIMPLE_COLORS["red"][0]))
+                            self._err_to_insert.append(
+                                (
+                                    err_char.decode("utf-8"),
+                                    SIMPLE_COLORS["red"][0]
+                                )
+                            )
 
                         self._err_to_insert.append(("", ""))  # end code
 
-                sleep(.0001)  # I know python is slow, but believe me, this does actually make a difference
+                # I know python is slow, but believe me,
+                # this does actually make a difference
+                sleep(.0001)
 
         except Exception:
             print("program exited: ", format_exc())
@@ -166,8 +189,8 @@ class TermBox(ctk.CTkTextbox):
 
     def run_program(
             self,
-            command: str | bytes | os.PathLike[str] | os.PathLike[bytes] | tp.Sequence[
-                str | bytes | os.PathLike[str] | os.PathLike[bytes]]
+            command: str | bytes | os.PathLike[str] | os.PathLike[bytes] |
+            tp.Sequence[str | bytes | os.PathLike[str] | os.PathLike[bytes]]
             ) -> subprocess.Popen:
         """
         run a program
@@ -213,8 +236,13 @@ class TermBox(ctk.CTkTextbox):
         self._to_insert.clear()
 
         # only insert if a whole error message is present
-        if not (self._program_running or self._to_insert) and self._err_to_insert and self._err_to_insert[-1][0] == "":
-            tmp = [("\n", "")] + self._err_to_insert.copy()[:-1]  # add newline for better readability
+        if all([not (
+                self._program_running or self._to_insert),
+                self._err_to_insert,
+                self._err_to_insert[-1][0] == ""
+                ]):
+            # add newline for better readability
+            tmp = [("\n", "")] + self._err_to_insert.copy()[:-1]
             self._insert_grouped(tmp)
             self._err_to_insert.clear()
 
