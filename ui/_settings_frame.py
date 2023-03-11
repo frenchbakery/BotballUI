@@ -93,7 +93,7 @@ class SettingsFrame(ctk.CTkFrame):
         tmp = ctk.CTkTextbox(self, font=("Sans-Serif", 20), height=60)
         for directory in self.window_config["program_directories"]:
             tmp.insert(ctk.END, directory + "\n")
-        tmp.grid(row=3, column=1, sticky="ew", pady=5)
+        tmp.grid(row=3, column=1, sticky="ew", pady=5, padx=10)
 
         # ignores
         ctk.CTkLabel(
@@ -104,7 +104,7 @@ class SettingsFrame(ctk.CTkFrame):
         tmp = ctk.CTkTextbox(self, font=("Sans-Serif", 20), height=60)
         for directory in self.window_config["program_ignores"]:
             tmp.insert(ctk.END, directory + "\n")
-        tmp.grid(row=4, column=1, sticky="ew", pady=5)
+        tmp.grid(row=4, column=1, sticky="ew", pady=10, padx=10)
 
     def update_appearance(self, value: tp.Literal["dark", "light"]) -> None:
         """

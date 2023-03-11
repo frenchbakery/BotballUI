@@ -76,6 +76,8 @@ class Window(ctk.CTk):
         self.attributes("-fullscreen", WINDOW_CONFIG["fullscreen"])
         self.minsize(500, 300)
 
+        # events
+        self.protocol("WM_DELETE_WINDOW", self.end)
         # ui layout
         self.grid_columnconfigure((0, 1), weight=1)
         self.grid_rowconfigure(0, weight=0)

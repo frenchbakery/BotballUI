@@ -8,13 +8,9 @@ Author:
 Nilusink
 """
 from concurrent.futures import ThreadPoolExecutor
-from ._tk_term_colors import cmd_to_tk, SIMPLE_COLORS, COMPLEX_COLORS
-from subprocess import Popen, PIPE
-from traceback import format_exc
+from._term_box import TermBox
 import customtkinter as ctk
-from time import sleep
 import typing as tp
-import signal
 import os
 
 
@@ -34,18 +30,12 @@ class RunFrame(ctk.CTkFrame):
     programs: dict[str, str] = ...
     _pool: ThreadPoolExecutor = ...
     _selected_program: tp.Union[str, None] = None
-    _running_program: tp.Union[Popen, None] = None
     window_config: WindowConfig = ...
-    _program_running: bool = False
-    _to_insert: list[tuple[str, str]] = ...
 
     def __init__(self, window_config: WindowConfig, *args, **kwargs) -> None:
-        # threads
-        self._pool = ThreadPoolExecutor(max_workers=1)
-        self._pool.submit(self._stdout_update)
-
         # mutable defaults
         self.window_config = window_config
+        self._err_to_insert = []
         self._to_insert = []
         self.programs = {}
 
@@ -82,14 +72,8 @@ class RunFrame(ctk.CTkFrame):
         )
         self.programs_combo.grid(row=0, column=0, sticky="ew", padx=30)
 
-        self.std_out = ctk.CTkTextbox(self, font=("Sans-Serif", 20))
+        self.std_out = TermBox(self, font=("Sans-Serif", 20))
         self.std_out.grid(row=1, column=0, sticky="nsew", padx=20, pady=20, columnspan=2)
-
-        for color in SIMPLE_COLORS:
-            if color[0] == "Reset":
-                continue
-
-            self.std_out._textbox.tag_configure(color[0], foreground=color[0])
 
     def update_programs(self) -> bool:
         """
@@ -128,80 +112,30 @@ class RunFrame(ctk.CTkFrame):
         run a program
         """
         if self._selected_program is not None:
-            self.std_out.delete(0.0, ctk.END)  # clear output texbox
-            self._running_program = Popen(self._selected_program + "/run/main", stdout=PIPE)
+            # self._running_program = Popen(self._selected_program + "/run/main", stdout=PIPE)
+            self._running_program = self.std_out.run_program(["python3.10", "/home/nilusink/scripts/color_test.py"])
 
     def _kill_program(self, *_trash) -> None:
         """
         kill the currently running program
         """
-        if self._running_program is not None:
-            self._running_program.send_signal(signal.SIGTERM)
-
-    def _stdout_update(self) -> None:
-        """
-        thread, gets programs stdout and writes it into the textbox
-        """
-        curr_tag = ""
-        try:
-            while self.running:
-                if self._running_program is not None:
-                    self._program_running = self._running_program.poll() is None
-
-                    if 1: #self._program_running:
-                        byte_char = self._running_program.stdout.read(1)
-
-                        if byte_char:
-                            if byte_char[0] == 27:  # font control character
-                                curr = b""
-                                n_char = self._running_program.stdout.read(1)
-                                while n_char[0] != 109:
-                                    curr += n_char
-                                    n_char = self._running_program.stdout.read(1)
-
-                                    if len(curr) > 10:
-                                        raise ValueError
-
-                                control_code = 0
-                                s_curr = curr.decode().lstrip("[").rstrip("m")
-                                if ";" in s_curr:
-                                    control_code, color = s_curr.split(";")
-
-                                else:
-                                    color = s_curr
-
-                                tk_col = cmd_to_tk(int(color), int(control_code))
-                                if tk_col.lower() in ("reset", "undefined", "unsuported"):
-                                    curr_tag = ""
-                                    continue
-
-                                curr_tag = tk_col
-                                continue
-
-                            self._to_insert.append((byte_char.decode("utf-8"), curr_tag))
-
-                sleep(.02)
-
-        except Exception:
-            print(format_exc())
-            raise
+        self.std_out.kill_program()
 
     def update(self) -> None:
         if self.update_programs():
             self.programs_combo.configure(values=list(self.programs.keys()))
 
-        tmp = self._to_insert.copy()
-        self._to_insert.clear()
-        for line in tmp:
-            self.std_out.insert(ctk.END, *line)
-
-        self.program_button.configure(text="Kill" if self._program_running else "Start")
-        self.program_button.configure(fg_color="#aa3333" if self._program_running else "#3a7ebf")
-        self.program_button.configure(command=self._kill_program if self._program_running else self._run_program)
+        self.std_out.update()
+        self.program_button.configure(text="Kill" if self.std_out.program_running else "Start")
+        self.program_button.configure(fg_color="#aa3333" if self.std_out.program_running else "#3a7ebf")
+        self.program_button.configure(command=self._kill_program if self.std_out.program_running else self._run_program)
 
     def end(self) -> None:
         """
         close the program
         """
         self.running = False
-        self._kill_program()
+        self.std_out.end()
+
+    def destroy(self):
+        self.end()

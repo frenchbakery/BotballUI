@@ -34,8 +34,8 @@ COMPLEX_COLORS = [
 
 def cmd_to_tk(color: int, control_code: int = 0) -> str:
     """
+    convert a terminal color to a tikinter valid color
     """
-    print("called: ", color, control_code)
     if color == 0:
         return "reset"
 
@@ -55,3 +55,37 @@ def cmd_to_tk(color: int, control_code: int = 0) -> str:
         # return "undefined"
 
     return "undefined"
+
+
+def read_color_code(stdout) -> str:
+    """
+    read the current color (only call after 27)
+
+    :param stdout:
+    :param current_flag:
+    :return:
+    """
+    curr = b""
+    n_char = stdout.read(1)
+    while n_char[0] != 109:
+        curr += n_char
+        n_char = stdout.read(1)
+
+        if len(curr) > 10:
+            raise ValueError
+
+    control_code = 0
+    s_curr = curr.decode().lstrip("[").rstrip("m")
+    if ";" in s_curr:
+        control_code, color = s_curr.split(";")
+
+    else:
+        color = s_curr
+
+    tk_col = cmd_to_tk(int(color), int(control_code))
+    if tk_col.lower() in ("reset", "undefined", "unsuported"):
+        return ""
+
+    return tk_col
+    return
+
