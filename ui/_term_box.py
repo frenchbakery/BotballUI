@@ -15,7 +15,13 @@ from time import sleep
 import typing as tp
 import subprocess
 import signal
+import string
 import os
+
+
+class ControlKeys(tp.TypedDict):
+    ctrl: bool
+    shift: bool
 
 
 class TermBox(ctk.CTkTextbox):
@@ -26,16 +32,21 @@ class TermBox(ctk.CTkTextbox):
     _program_running: bool = False
     _to_insert: list[tuple[str, str]] = ...
     _err_to_insert: list[tuple[str, str]] = ...
+    _control_keys: ControlKeys = ...
     running = True
 
     def __init__(self, *args, proc: tp.Union[subprocess.Popen, None] = None, **kwargs):
         self._running_program = proc
         self._to_insert: list[tuple[str, str]] = []
         self._err_to_insert: list[tuple[str, str]] = []
+        self._control_keys = {
+            "ctrl": False,
+            "shift": False
+        }
 
         super().__init__(*args, **kwargs)
 
-        for color in SIMPLE_COLORS:
+        for color in SIMPLE_COLORS.values():
             if color[0] == "Reset":
                 continue
 
@@ -44,6 +55,72 @@ class TermBox(ctk.CTkTextbox):
         # threads
         self._pool = ThreadPoolExecutor(max_workers=1)
         self._pool.submit(self._update_proc)
+
+        # modify binds
+        self.bind("<KeyPress>", self._update_stdin)
+        self.bind("<KeyRelease>", self._on_key_up)
+
+    def _update_stdin(self, event) -> None:
+        """
+        update the process on key input
+        """
+        if not self._program_running:
+            return
+
+        # ctrl is held
+        if self._control_keys["ctrl"]:
+            match event.keysym:
+                case "c":
+                    self._running_program.send_signal(signal.SIGINT)
+
+                case "l":
+                    self.delete(0.0, ctk.END)
+
+            return
+
+        if event.keysym in string.ascii_letters:
+            print(event.keysym, end="")
+            self._running_program.stdin.write(event.keysym.encode("utf-8"))
+
+        elif event.keysym.lower() == "return":
+            print(b"\x0d\x0a".decode(), end="")
+            self._running_program.stdin.write(b"\x0a\x20")  # cr + lf
+            # self._running_program.stdin.write("\n".encode())  # cr + lf
+
+        elif event.keysym.lower() == "backspace":
+            print(b"\x08".decode(), end="")        # elif event.keysym.lower() == "return":
+            self._running_program.stdin.write(b"\x08")
+
+        elif event.keysym.lower() == "space":
+            print(b"\x20".decode(), end="")
+            self._running_program.stdin.write(b"\x20")
+
+        elif event.keysym.startswith("Control"):
+            self._control_keys["ctrl"] = True
+            return
+
+        elif event.keysym.startswith("Shift"):
+            self._control_keys["shift"] = True
+            return
+
+        else:
+            print(event.keysym)
+            print(event.char, end="")
+            self._running_program.stdin.write(event.char.encode())
+
+        self._running_program.stdin.flush()
+
+    def _on_key_up(self, event) -> None:
+        """
+        handles key up events
+        """
+        if event.keysym.startswith("Control"):
+            self._control_keys["ctrl"] = False
+            return
+
+        elif event.keysym.startswith("Shift"):
+            self._control_keys["shift"] = False
+            return
 
     def _update_proc(self) -> None:
         """
@@ -67,15 +144,15 @@ class TermBox(ctk.CTkTextbox):
                     # only read error messages when there is no stdout to read anymore
                     err_char = self._running_program.stderr.read(1)
                     if err_char:
-                        self._err_to_insert.append((err_char.decode("utf-8"), "#75020c"))
+                        self._err_to_insert.append((err_char.decode("utf-8"), SIMPLE_COLORS["red"][0]))
 
                         # read until nothing more to read
                         while err_char := self._running_program.stderr.read(1):
-                            self._err_to_insert.append((err_char.decode("utf-8"), "#75020c"))
+                            self._err_to_insert.append((err_char.decode("utf-8"), SIMPLE_COLORS["red"][0]))
 
                         self._err_to_insert.append(("", ""))  # end code
 
-                sleep(.0001)  # i know python is slow, but believe me, this does actually make a difference
+                sleep(.0001)  # I know python is slow, but believe me, this does actually make a difference
 
         except Exception:
             print("program exited: ", format_exc())
@@ -98,7 +175,10 @@ class TermBox(ctk.CTkTextbox):
         """
         self.delete(0.0, ctk.END)  # clear output texbox
         self._running_program = subprocess.Popen(
-            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE,
         )
         return self._running_program
 

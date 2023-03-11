@@ -112,8 +112,7 @@ class RunFrame(ctk.CTkFrame):
         run a program
         """
         if self._selected_program is not None:
-            # self._running_program = Popen(self._selected_program + "/run/main", stdout=PIPE)
-            self._running_program = self.std_out.run_program(["python3.10", "/home/nilusink/scripts/color_test.py"])
+            self._running_program = self.std_out.run_program(self._selected_program + "/run/main")
 
     def _kill_program(self, *_trash) -> None:
         """
