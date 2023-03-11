@@ -182,52 +182,47 @@ class TermBox(ctk.CTkTextbox):
         )
         return self._running_program
 
+    def _insert_grouped(self, to_insert: list[tuple[str, str]]) -> None:
+        """
+        groups by tag and inserts into texbox
+        :param to_insert: ungrouped chars / tags
+        """
+        grouped: list[list[str, str]] = []
+        curr_flag = None
+        for line in to_insert:
+            char, flag = line
+            if flag == curr_flag:
+                grouped[-1][0] += char
+                continue
+
+            curr_flag = flag
+            grouped.append([char, flag])
+
+        for s in grouped:
+            self.insert(ctk.END, *s)
+
+        if grouped:
+            # scroll to end
+            self.see("end")
+
     def update(self) -> None:
         """
         update the textbox text insertion
         """
         # insert stdout into textbox
-        # group by color
-        tmp = self._to_insert.copy()
-        to_insert: list[list[str, str]] = []
+        self._insert_grouped(self._to_insert.copy())
         self._to_insert.clear()
-        curr_flag = None
-        for line in tmp:
-            char, flag = line
-            if flag == curr_flag:
-                to_insert[-1][0] += char
-                continue
 
-            curr_flag = flag
-            to_insert.append([char, flag])
-
-        for s in to_insert:
-            self.insert(ctk.END, *s)
-
-        # error messages
-        # only insert if a whole message is present
+        # only insert if a whole error message is present
         if not (self._program_running or self._to_insert) and self._err_to_insert and self._err_to_insert[-1][0] == "":
-            # add newline for better readability
-            tmp = [("\n", "")] + self._err_to_insert.copy()[:-1]
-            to_insert: list[list[str, str]] = []
+            tmp = [("\n", "")] + self._err_to_insert.copy()[:-1]  # add newline for better readability
+            self._insert_grouped(tmp)
             self._err_to_insert.clear()
-            curr_flag = None
-            for line in tmp:
-                char, flag = line
-                if flag == curr_flag:
-                    to_insert[-1][0] += char
-                    continue
-
-                curr_flag = flag
-                to_insert.append([char, flag])
-
-            for s in to_insert:
-                self.insert(ctk.END, *s)
 
     def update_process(self, proc: subprocess.Popen):
         """
         update the currently running process
-        :param proc: process
+        :param proc: subprocess popen process
         """
         self.delete(0.0, ctk.END)  # clear output texbox
         self._running_program = proc
