@@ -69,12 +69,11 @@ class TermBox(ctk.CTkTextbox):
 
         # ctrl is held
         if self._control_keys["ctrl"]:
-            match event.keysym:
-                case "c":
-                    self._running_program.send_signal(signal.SIGINT)
+            if event.keysym == "c":
+                self._running_program.send_signal(signal.SIGINT)
 
-                case "l":
-                    self.delete(0.0, ctk.END)
+            elif event.keysym == "l":
+                self.delete(0.0, ctk.END)
 
             return
 
