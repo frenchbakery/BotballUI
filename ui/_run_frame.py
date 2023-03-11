@@ -96,7 +96,9 @@ class RunFrame(ctk.CTkFrame):
         changed = False
         for program_dir in self.window_config["program_directories"]:
             if os.path.exists(program_dir):
-                for directory in os.listdir(program_dir):
+                for directory in [d for d in os.listdir(program_dir) if
+                                  os.path.isdir(d)]:
+
                     program_name = directory.split("/")[-1]
                     program_path = program_dir + "/" + directory
 

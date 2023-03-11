@@ -236,11 +236,9 @@ class TermBox(ctk.CTkTextbox):
         self._to_insert.clear()
 
         # only insert if a whole error message is present
-        if all([not (
-                self._program_running or self._to_insert),
-                self._err_to_insert,
-                self._err_to_insert[-1][0] == ""
-                ]):
+        if not (self._program_running or self._to_insert) and \
+                self._err_to_insert and self._err_to_insert[-1][0] == "":
+
             # add newline for better readability
             tmp = [("\n", "")] + self._err_to_insert.copy()[:-1]
             self._insert_grouped(tmp)
