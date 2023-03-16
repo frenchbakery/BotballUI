@@ -24,7 +24,13 @@ class SettingsFrame(ctk.CTkFrame):
     window_config: WindowConfig = ...
     config_path: str = ...
 
-    def __init__(self, window_config: WindowConfig, config_path: str, *args, **kwargs) -> None:
+    def __init__(
+            self,
+            window_config: WindowConfig,
+            config_path: str,
+            *args,
+            **kwargs
+    ) -> None:
         self.window_config = window_config
         self.config_path = config_path
 
@@ -93,7 +99,7 @@ class SettingsFrame(ctk.CTkFrame):
         tmp = ctk.CTkTextbox(self, font=("Sans-Serif", 20), height=60)
         for directory in self.window_config["program_directories"]:
             tmp.insert(ctk.END, directory + "\n")
-        tmp.grid(row=3, column=1, sticky="ew", pady=5)
+        tmp.grid(row=3, column=1, sticky="ew", pady=5, padx=10)
 
         # ignores
         ctk.CTkLabel(
@@ -104,7 +110,7 @@ class SettingsFrame(ctk.CTkFrame):
         tmp = ctk.CTkTextbox(self, font=("Sans-Serif", 20), height=60)
         for directory in self.window_config["program_ignores"]:
             tmp.insert(ctk.END, directory + "\n")
-        tmp.grid(row=4, column=1, sticky="ew", pady=5)
+        tmp.grid(row=4, column=1, sticky="ew", pady=10, padx=10)
 
     def update_appearance(self, value: tp.Literal["dark", "light"]) -> None:
         """
@@ -115,7 +121,10 @@ class SettingsFrame(ctk.CTkFrame):
         ctk.set_appearance_mode(value)
         self.update_config()
 
-    def update_theme(self, value: tp.Literal["dark-blue", "blue", "green"]) -> None:
+    def update_theme(
+            self,
+            value: tp.Literal["dark-blue", "blue", "green"]
+    ) -> None:
         """
         update the appearance variable
         :param value: new appearance
@@ -138,5 +147,3 @@ class SettingsFrame(ctk.CTkFrame):
         """
         with open(self.config_path, "w") as out:
             json.dump(self.window_config, out, indent=4)
-
-
