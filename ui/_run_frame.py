@@ -97,7 +97,7 @@ class RunFrame(ctk.CTkFrame):
         for program_dir in self.window_config["program_directories"]:
             if os.path.exists(program_dir):
                 for directory in [d for d in os.listdir(program_dir) if
-                                  os.path.isdir(d)]:
+                                  os.path.isdir(program_dir + "/" + d)]:
 
                     program_name = directory.split("/")[-1]
                     program_path = program_dir + "/" + directory
@@ -139,6 +139,7 @@ class RunFrame(ctk.CTkFrame):
 
     def update(self) -> None:
         if self.update_programs():
+            print("updating: ", list(self.programs.keys()))
             self.programs_combo.configure(values=list(self.programs.keys()))
 
         self.std_out.update()
