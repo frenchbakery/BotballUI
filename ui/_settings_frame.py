@@ -51,7 +51,7 @@ class SettingsFrame(ctk.CTkFrame):
             values=["dark", "light"],
             font=("Sans-Serif", 30),
             command=self.update_appearance,
-            dropdown_font=("Sans-Serif", 30)
+            dropdown_font=("Sans-Serif", 30),
         )
         tmp.set(self.window_config["appearance_mode"])
         tmp.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
@@ -70,7 +70,7 @@ class SettingsFrame(ctk.CTkFrame):
             dropdown_font=("Sans-Serif", 30),
         )
         tmp.set(self.window_config["theme"])
-        tmp.grid(row=1, column=1, sticky="nsew", padx=10, pady=10)
+        tmp.grid(row=1, column=1, sticky="nsew")
 
         # fullscreen
         ctk.CTkLabel(

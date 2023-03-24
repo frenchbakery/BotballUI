@@ -74,6 +74,11 @@ class Window(ctk.CTk):
 
         self.title("BotUI")
         self.attributes("-fullscreen", WINDOW_CONFIG["fullscreen"])
+        if "-zoomed" in self.attributes():
+            self.attributes("-zoomed", True)
+        else:
+            self.state("zoomed")
+
         self.minsize(500, 300)
 
         # events

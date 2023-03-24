@@ -58,7 +58,6 @@ class TemplateBox(CTkFrame):
 
     def press(self, but: str) -> None:
         ev = Event()
-        # <KeyPress event state=Mod1 keysym=d keycode=68 char='d' x=1067 y=-273>
         ev.keysym = self.__class__.KEYSYM[but] if but in self.__class__.KEYSYM else but
         ev.char = but
         ev.x = 0
