@@ -9,6 +9,7 @@ Nilusink
 """
 from concurrent.futures import ThreadPoolExecutor
 from ._term_box import TermBox
+from ._template_box import TemplateBox
 import customtkinter as ctk
 import typing as tp
 import os
@@ -32,6 +33,8 @@ class RunFrame(ctk.CTkFrame):
     _selected_program: tp.Union[str, None] = None
     window_config: WindowConfig = ...
 
+    std_out_templates: TemplateBox
+
     def __init__(self, window_config: WindowConfig, *args, **kwargs) -> None:
         # mutable defaults
         self.window_config = window_config
@@ -45,8 +48,8 @@ class RunFrame(ctk.CTkFrame):
         # ui layout
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=0)
+        self.grid_columnconfigure(0, weight=5)
+        self.grid_columnconfigure(1, weight=1)
 
         self.program_button = ctk.CTkButton(
             self,
@@ -55,8 +58,7 @@ class RunFrame(ctk.CTkFrame):
             corner_radius=15,
             command=self._run_program,
             fg_color="#3a7ebf",
-            height=100,
-            width=300,
+            height=100
         )
         self.program_button.grid(
             row=0,
@@ -84,8 +86,20 @@ class RunFrame(ctk.CTkFrame):
             column=0,
             sticky="nsew",
             padx=20,
+            pady=20
+        )
+
+        self.std_out_templates = TemplateBox(
+            self,
+            buttons={"a": "a", "b": "b", "c": "c", "Enter": "\n"},
+            callback=self.std_out.send_key,
+            font=("Sans-Serif", 20)
+        )
+        self.std_out_templates.grid(
+            row=1, column=1,
+            sticky="NSEW",
+            padx=10,
             pady=20,
-            columnspan=2
         )
 
     def update_programs(self) -> bool:
@@ -110,7 +124,8 @@ class RunFrame(ctk.CTkFrame):
                             self._selected_program = program_path
 
             else:
-                print(f"directory doesnt' exist: \"{program_dir}\"")
+                ...
+                #print(f"directory doesnt' exist: \"{program_dir}\"")
 
         return changed
 

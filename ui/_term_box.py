@@ -11,6 +11,7 @@ from ._tk_term_colors import SIMPLE_COLORS, read_color_code
 from concurrent.futures import ThreadPoolExecutor
 from traceback import format_exc
 import customtkinter as ctk
+from tkinter import Event
 from time import sleep
 import typing as tp
 import subprocess
@@ -61,6 +62,10 @@ class TermBox(ctk.CTkTextbox):
         # modify binds
         self.bind("<KeyPress>", self._update_stdin)
         self.bind("<KeyRelease>", self._on_key_up)
+
+    def send_key(self, key: str, event: Event) -> None:
+        self.insert("end", key+"\n")
+        self._update_stdin(event)
 
     def _update_stdin(self, event) -> None:
         """
