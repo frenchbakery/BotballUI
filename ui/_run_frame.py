@@ -11,6 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 from ._term_box import TermBox
 from ._template_box import TemplateBox
 import customtkinter as ctk
+from json import loads
 import typing as tp
 import os
 
@@ -19,6 +20,8 @@ class WindowConfig(tp.TypedDict):
     appearance_mode: tp.Literal["dark", "light"]
     program_directories: list[str]
     program_ignores: list[str]
+    keyboard_var: ctk.Variable
+    keyboard: list[tuple[str, str]]
     fullscreen: bool
     theme: str
 
@@ -48,8 +51,8 @@ class RunFrame(ctk.CTkFrame):
         # ui layout
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=1)
-        self.grid_columnconfigure(0, weight=5)
-        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure((0, 1), weight=1)
+        self.grid_columnconfigure(2, weight=1)
 
         self.program_button = ctk.CTkButton(
             self,
@@ -84,6 +87,7 @@ class RunFrame(ctk.CTkFrame):
         self.std_out.grid(
             row=1,
             column=0,
+            columnspan=2,
             sticky="nsew",
             padx=20,
             pady=20
@@ -91,12 +95,13 @@ class RunFrame(ctk.CTkFrame):
 
         self.std_out_templates = TemplateBox(
             self,
-            buttons={"a": "a", "b": "b", "c": "c", "Enter": "\n"},
+            button_var=self.window_config["keyboard_var"],
             callback=self.std_out.send_key,
             font=("Sans-Serif", 20)
         )
         self.std_out_templates.grid(
-            row=1, column=1,
+            row=0, column=2,
+            rowspan=2,
             sticky="NSEW",
             padx=10,
             pady=20,

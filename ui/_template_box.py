@@ -10,9 +10,10 @@ Author: Lukas Krahbichler
 #                    Imports                     #
 ##################################################
 
-from customtkinter import CTkFrame, CTkButton, CTkFont
+from customtkinter import CTkFrame, CTkButton, CTkFont, Variable
 from typing import Any, Optional, Union, Callable
 from tkinter import Event, Misc
+from json import loads
 
 
 ##################################################
@@ -23,6 +24,7 @@ class TemplateBox(CTkFrame):
     """
     Some buttons for termbox
     """
+    __button_var: Variable
     __buttons: list[CTkButton]
     __callback: Callable[[str, Event], any]
     __font = Optional[Union[tuple, CTkFont]]
@@ -36,7 +38,7 @@ class TemplateBox(CTkFrame):
     def __init__(
             self,
             master: Misc,
-            buttons: dict[str, str],
+            button_var: Variable,
             callback: Callable[[str, Event], any],
             *args: Any,
             font: Optional[Union[tuple, CTkFont]] = None,
@@ -46,12 +48,31 @@ class TemplateBox(CTkFrame):
         self.configure(width=0, height=0)
 
         self.__buttons = []
+        self.__button_var = button_var
         self.__callback = callback
         self.__font = font
 
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+
+        self.__button_var.trace_add("write", self._update_buttons)
+
+    def _update_buttons(self, *_args) -> None:
+        buttons: list[tuple[str, str]] = self.__button_var.get()
+        print("NEW BUTS", buttons)
+
+        self.grid_rowconfigure("all", weight=0)
+
+        for but in self.__buttons:
+            but.grid_forget()
+            but.destroy()
+            del but
+
+        self.__buttons = []
+
         for but in buttons:
             self.__buttons.append(
-                CTkButton(self, text=but, font=font, command=lambda k=buttons[but]: self.press(k))
+                CTkButton(self, text=but[0], font=self.__font, command=lambda k=but[1]: self.press(k))
             )
 
         self.__grid_widgets()
@@ -70,7 +91,6 @@ class TemplateBox(CTkFrame):
         self.__callback(but, ev)
 
     def __grid_widgets(self) -> None:
-        self.grid_columnconfigure(0, weight=1)
         for i, button in enumerate(self.__buttons):
-            button.grid(row=i, column=0, sticky="NSEW", pady=5)
+            button.grid(row=i, column=0, sticky="NSEW", pady=5, columnspan=2)
             self.grid_rowconfigure(i, weight=1)

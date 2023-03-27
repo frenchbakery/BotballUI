@@ -16,6 +16,8 @@ class WindowConfig(tp.TypedDict):
     appearance_mode: tp.Literal["dark", "light"]
     program_directories: list[str]
     program_ignores: list[str]
+    keyboard_var: ctk.Variable
+    keyboard: list[tuple[str, str]]
     fullscreen: bool
     theme: str
 
