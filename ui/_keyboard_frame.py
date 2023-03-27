@@ -114,12 +114,14 @@ class KeyboardFrame(CTkFrame):
             if isinstance(widget, CTkEntry):
                 widget.grid_forget()
 
-        self.__top_label.grid(row=0, column=0, sticky="NSEW")
-        self.__top_key.grid(row=0, column=1, sticky="NSEW")
+        self.__top_label.grid(row=0, column=0, sticky="NSEW", pady=(30, 0), padx=(30, 0))
+        self.__top_key.grid(row=0, column=1, sticky="NSEW", pady=(30, 0), padx=(0, 30))
 
         for i, entry in enumerate(self.__entries):
-            entry[0].grid(row=i+1, column=0, sticky="NSEW")
-            entry[1].grid(row=i+1, column=1, sticky="NSEW")
+            entry[0].grid(row=i+1, column=0, sticky="NSEW", padx=(30, 0),
+                          pady=(5, 30 if i == len(self.__entries)-1 else 0))
+            entry[1].grid(row=i+1, column=1, sticky="NSEW", padx=(0, 30),
+                          pady=(5, 30 if i == len(self.__entries)-1 else 0))
 
         self.grid_rowconfigure("all", weight=1)
 

@@ -122,7 +122,7 @@ class Window(ctk.CTk):
         self.__frames = {
             "Run": RunFrame(WINDOW_CONFIG, self, corner_radius=30),
             "Settings": SettingsFrame(WINDOW_CONFIG, CONFIG_PAH, self, corner_radius=30),
-            "Keyboard": KeyboardFrame(self, WINDOW_CONFIG, CONFIG_PAH, font=("Sans-Serif", 30))
+            "Keyboard": KeyboardFrame(self, WINDOW_CONFIG, CONFIG_PAH, font=("Sans-Serif", 30), corner_radius=30)
         }
 
         self._change_frame("Run")
