@@ -13,6 +13,7 @@ Author: Lukas Krahbichler
 from customtkinter import CTkFrame, Variable, CTkEntry, CTkFont, CTkLabel
 from typing import Any, TypedDict, Literal, Optional, Union
 from tkinter import Misc, Entry
+from json import dump
 
 
 ##################################################
@@ -24,7 +25,6 @@ class WindowConfig(TypedDict):
     program_directories: list[str]
     program_ignores: list[str]
     keyboard: list[tuple[str, str]]
-    keyboard_var: Variable
     fullscreen: bool
     theme: str
 
@@ -42,6 +42,7 @@ class KeyboardFrame(CTkFrame):
 
     __window_config: WindowConfig
     __config_path: str
+    __keyboard: Variable
     __font: Optional[Union[tuple, CTkFont]]
 
     __top_label: CTkLabel
@@ -52,6 +53,7 @@ class KeyboardFrame(CTkFrame):
             master: Misc,
             window_config: WindowConfig,
             config_path: str,
+            keyboard: Variable,
             font: Optional[Union[tuple, CTkFont]] = None,
             *args: Any,
             **kwargs: Any) -> None:
@@ -59,6 +61,7 @@ class KeyboardFrame(CTkFrame):
 
         self.__window_config = window_config
         self.__config_path = config_path
+        self.__keyboard = keyboard
         self.__font = font
 
         self.__entries = []
@@ -72,23 +75,36 @@ class KeyboardFrame(CTkFrame):
         self._update()
 
     def _update(self, *_args) -> None:
-        if self.__entries[-1][0].get() != "" or self.__entries[-1][1].get() != "":
+        if self.__entries:
+            if self.__entries[-1][0].get() != "" or self.__entries[-1][1].get() != "":
+                self._add_entry()
+
+            dels: list[tuple[KEntry, KEntry]] = []
+            for entry in self.__entries[:-1]:
+                if entry[0].get() == "" and entry[1].get() == "" \
+                        and self.focus_get() != entry[0].get_entry() and self.focus_get() != entry[1].get_entry():
+                    dels.append(entry)
+
+                if len(entry[1].get()) > 1:
+                    let: str = entry[1].get()[-1:]
+                    entry[1].delete(0, "end")
+                    entry[1].insert(0, let)
+
+            for d in dels:
+                self.__entries.remove(d)
+        else:
             self._add_entry()
 
-        dels: list[tuple[KEntry, KEntry]] = []
-        for entry in self.__entries[:-1]:
-            if entry[0].get() == "" and entry[1].get() == "" \
-                    and self.focus_get() != entry[0].get_entry() and self.focus_get() != entry[1].get_entry():
-                dels.append(entry)
+        new_kb: list[tuple[str, str]] = []
 
-            if len(entry[1].get()) > 1:
-                let: str = entry[1].get()[-1:]
-                entry[1].delete(0, "end")
-                entry[1].insert(0, let)
+        for entry in self.__entries:
+            new_kb.append((entry[0].get(), entry[1].get()))
 
-        for d in dels:
-            self.__entries.remove(d)
+        new_kb = new_kb[:-1] + [("Return", "\n")]
 
+        self.__window_config["keyboard"] = new_kb
+
+        self.config_save()
         self.__grid_widgets()
 
     def _add_entry(self, text1: str = "", text2: str = "") -> None:
@@ -126,23 +142,17 @@ class KeyboardFrame(CTkFrame):
         self.grid_rowconfigure("all", weight=1)
 
     def _create_entries(self) -> None:
-        for i, kb in enumerate(self.__window_config["keyboard_var"].get()[:-1]):
+        for i, kb in enumerate(self.__keyboard.get()[:-1]):
             self._add_entry(kb[0], kb[1])
 
     def grid_forget(self) -> None:
         super().grid_forget()
+        self.nametowidget(".").focus_force()
 
         self._update()
+        self.__keyboard.set(self.__window_config["keyboard"])
 
-        new_kb: list[tuple[str, str]] = []
-
-        for entry in self.__entries:
-            new_kb.append((entry[0].get(), entry[1].get()))
-
-        new_kb = new_kb[:-1] + [("Return", "\n")]
-
-        self.__window_config["keyboard"] = new_kb
-        self.__window_config["keyboard_var"].set(new_kb)
-
-
+    def config_save(self) -> None:
+        with open(self.__config_path, "w") as out:
+            dump(self.__window_config, out, indent=4)
 

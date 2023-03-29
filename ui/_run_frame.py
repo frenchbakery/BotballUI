@@ -20,7 +20,6 @@ class WindowConfig(tp.TypedDict):
     appearance_mode: tp.Literal["dark", "light"]
     program_directories: list[str]
     program_ignores: list[str]
-    keyboard_var: ctk.Variable
     keyboard: list[tuple[str, str]]
     fullscreen: bool
     theme: str
@@ -38,7 +37,7 @@ class RunFrame(ctk.CTkFrame):
 
     std_out_templates: TemplateBox
 
-    def __init__(self, window_config: WindowConfig, *args, **kwargs) -> None:
+    def __init__(self, window_config: WindowConfig, keyboard: ctk.Variable, *args, **kwargs) -> None:
         # mutable defaults
         self.window_config = window_config
         self._err_to_insert = []
@@ -94,7 +93,7 @@ class RunFrame(ctk.CTkFrame):
 
         self.std_out_templates = TemplateBox(
             self,
-            button_var=self.window_config["keyboard_var"],
+            button_var=keyboard,
             callback=self.std_out.send_key,
             font=("Sans-Serif", 20)
         )

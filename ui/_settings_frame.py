@@ -16,7 +16,6 @@ class WindowConfig(tp.TypedDict):
     appearance_mode: tp.Literal["dark", "light"]
     program_directories: list[str]
     program_ignores: list[str]
-    keyboard_var: ctk.Variable
     keyboard: list[tuple[str, str]]
     fullscreen: bool
     theme: str
@@ -72,7 +71,7 @@ class SettingsFrame(ctk.CTkFrame):
             dropdown_font=("Sans-Serif", 30),
         )
         tmp.set(self.window_config["theme"])
-        tmp.grid(row=1, column=1, sticky="nsew")
+        tmp.grid(row=1, column=1, sticky="nsew", padx=10, pady=10)
 
         # fullscreen
         ctk.CTkLabel(

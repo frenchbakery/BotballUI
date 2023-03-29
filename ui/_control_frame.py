@@ -28,7 +28,16 @@ class ControlFrame(CTkFrame):
     __reboot_button: CTkButton
     __restart_ui_button: CTkButton
 
-    def __init__(self, master: Misc, font: Optional[Union[tuple, CTkFont]] = None, *args, **kwargs) -> None:
+    # Shutdown, Reboot, Controler reset, restart_ui, kill all run/main
+
+    def __init__(
+            self,
+            master: Misc,
+            font: Optional[Union[tuple, CTkFont]] = None,
+            *args,
+
+            **kwargs
+    ) -> None:
         super().__init__(master, *args, **kwargs)
 
         self.__reboot_button = CTkButton(self, text="Reboot", font=font, fg_color="#3a7ebf",

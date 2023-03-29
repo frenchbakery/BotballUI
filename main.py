@@ -19,7 +19,6 @@ class WindowConfig(tp.TypedDict):
     appearance_mode: tp.Literal["dark", "light"]
     program_directories: list[str]
     program_ignores: list[str]
-    keyboard_var: ctk.Variable
     keyboard: list[tuple[str, str]]
     fullscreen: bool
     theme: str
@@ -77,13 +76,14 @@ class Window(ctk.CTk):
 
     __frames: dict[str, tp.Union[RunFrame, SettingsFrame, KeyboardFrame, ControlFrame, ctk.CTkFrame]]
     _FRAME_SEQUENCE: list[str] = ["Run", "Settings", "Keyboard", "Control"]
+    _keyboard_var: ctk.Variable
 
     def __init__(self) -> None:
         # init parent class
         super().__init__()
 
-        WINDOW_CONFIG["keyboard_var"] = ctk.Variable()
-        WINDOW_CONFIG["keyboard_var"].set(WINDOW_CONFIG["keyboard"])
+        self._keyboard_var = ctk.Variable()
+        self._keyboard_var.set(WINDOW_CONFIG["keyboard"])
 
         self.title("BotUI")
         self.attributes("-fullscreen", WINDOW_CONFIG["fullscreen"])
@@ -120,9 +120,9 @@ class Window(ctk.CTk):
         ).grid(row=0, column=1)
 
         self.__frames = {
-            "Run": RunFrame(WINDOW_CONFIG, self, corner_radius=30),
+            "Run": RunFrame(WINDOW_CONFIG, self._keyboard_var, self, corner_radius=30),
             "Settings": SettingsFrame(WINDOW_CONFIG, CONFIG_PAH, self, corner_radius=30),
-            "Keyboard": KeyboardFrame(self, WINDOW_CONFIG, CONFIG_PAH, font=("Sans-Serif", 30), corner_radius=30),
+            "Keyboard": KeyboardFrame(self, WINDOW_CONFIG, CONFIG_PAH, self._keyboard_var, font=("Sans-Serif", 30), corner_radius=30),
             "Control": ControlFrame(self, font=("Sans-Serif", 30), corner_radius=30)
         }
 
@@ -144,6 +144,7 @@ class Window(ctk.CTk):
                 sticky="nsew",
                 columnspan=2
             )
+        self.__frames[value].focus_force()
 
     def mainloop(self) -> None:
         """
@@ -158,6 +159,9 @@ class Window(ctk.CTk):
         """
         close the program
         """
+        with open(CONFIG_PAH, "w") as out:
+            json.dump(WINDOW_CONFIG, out, indent=4)
+
         self.__running = False
         self.__frames["Run"].end()
         self.destroy()
