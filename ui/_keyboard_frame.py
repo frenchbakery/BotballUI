@@ -132,6 +132,8 @@ class KeyboardFrame(CTkFrame):
     def grid_forget(self) -> None:
         super().grid_forget()
 
+        self._update()
+
         new_kb: list[tuple[str, str]] = []
 
         for entry in self.__entries:

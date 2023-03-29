@@ -65,6 +65,7 @@ class TermBox(ctk.CTkTextbox):
 
     def send_key(self, key: str, event: Event) -> None:
         self.insert("end", key+"\n")
+        self.see("end")
         self._update_stdin(event)
 
     def _update_stdin(self, event) -> None:

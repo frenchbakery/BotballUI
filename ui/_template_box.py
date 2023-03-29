@@ -72,7 +72,8 @@ class TemplateBox(CTkFrame):
 
         for but in buttons:
             self.__buttons.append(
-                CTkButton(self, text=but[0], font=self.__font, command=lambda k=but[1]: self.press(k))
+                CTkButton(self, text=but[0], font=self.__font,
+                          command=lambda k=but[1]: self.press(k), fg_color="#3a7ebf")
             )
 
         self.__grid_widgets()

@@ -51,8 +51,8 @@ class RunFrame(ctk.CTkFrame):
         # ui layout
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=1)
-        self.grid_columnconfigure((0, 1), weight=1)
-        self.grid_columnconfigure(2, weight=1)
+        self.grid_columnconfigure(0, weight=3)
+        self.grid_columnconfigure(1, weight=1)
 
         self.program_button = ctk.CTkButton(
             self,
@@ -87,7 +87,6 @@ class RunFrame(ctk.CTkFrame):
         self.std_out.grid(
             row=1,
             column=0,
-            columnspan=2,
             sticky="nsew",
             padx=20,
             pady=20
@@ -100,8 +99,7 @@ class RunFrame(ctk.CTkFrame):
             font=("Sans-Serif", 20)
         )
         self.std_out_templates.grid(
-            row=0, column=2,
-            rowspan=2,
+            row=1, column=1,
             sticky="NSEW",
             padx=10,
             pady=20,

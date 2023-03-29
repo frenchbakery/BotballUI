@@ -7,7 +7,7 @@ main.py
 Author:
 Nilusink
 """
-from ui import RunFrame, SettingsFrame, KeyboardFrame
+from ui import RunFrame, SettingsFrame, KeyboardFrame, ControlFrame
 import customtkinter as ctk
 import typing as tp
 import json
@@ -75,8 +75,8 @@ class Window(ctk.CTk):
     """
     __running: bool = True
 
-    __frames: dict[str, tp.Union[RunFrame, SettingsFrame, KeyboardFrame, ctk.CTkFrame]]
-    _FRAME_SEQUENCE: list[str] = ["Run", "Settings", "Keyboard"]
+    __frames: dict[str, tp.Union[RunFrame, SettingsFrame, KeyboardFrame, ControlFrame, ctk.CTkFrame]]
+    _FRAME_SEQUENCE: list[str] = ["Run", "Settings", "Keyboard", "Control"]
 
     def __init__(self) -> None:
         # init parent class
@@ -104,7 +104,7 @@ class Window(ctk.CTk):
         sb = ctk.CTkSegmentedButton(
             self,
             values=self._FRAME_SEQUENCE,
-            font=("Sans-Serif", 30),
+            font=("Sans-Serif", 40),
             command=self._change_frame
         )
         sb._select_button_by_value("Run")
@@ -116,13 +116,14 @@ class Window(ctk.CTk):
             fg_color="#aa3333",
             hover_color="#ff0000",
             command=self.end,
-            font=("Sans-Serif", 30)
+            font=("Sans-Serif", 40)
         ).grid(row=0, column=1)
 
         self.__frames = {
             "Run": RunFrame(WINDOW_CONFIG, self, corner_radius=30),
             "Settings": SettingsFrame(WINDOW_CONFIG, CONFIG_PAH, self, corner_radius=30),
-            "Keyboard": KeyboardFrame(self, WINDOW_CONFIG, CONFIG_PAH, font=("Sans-Serif", 30), corner_radius=30)
+            "Keyboard": KeyboardFrame(self, WINDOW_CONFIG, CONFIG_PAH, font=("Sans-Serif", 30), corner_radius=30),
+            "Control": ControlFrame(self, font=("Sans-Serif", 30), corner_radius=30)
         }
 
         self._change_frame("Run")
