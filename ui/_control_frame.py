@@ -46,11 +46,11 @@ class ControlFrame(CTkFrame):
             [
                 (
                     "Shutdown",
-                    lambda: self.__run("sudo reboot")
+                    lambda: self.__run("sudo shutdown now")
                 ),
                 (
                     "Reboot",
-                    lambda: self.__run("sudo shutdown now")
+                    lambda: self.__run("sudo reboot")
                 )
             ],
             [

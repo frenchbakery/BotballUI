@@ -21,7 +21,7 @@ def get_running_pids(identifier: str = SEARCH_FOR) -> list[int]:
     """
     get the pids of all running processes
     """
-    if platform.system() == "linux":
+    if platform.system() == "Linux":
         process_output = subprocess.check_output(["ps", "-ax"]).decode()
         return [strip_pid(line) for line in process_output.split("\n")
                 if identifier in line]
