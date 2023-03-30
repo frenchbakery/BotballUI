@@ -7,7 +7,7 @@ main.py
 Author:
 Nilusink
 """
-from ui import RunFrame, SettingsFrame
+from ui import RunFrame, SettingsFrame, KeyboardFrame, ControlFrame
 import customtkinter as ctk
 import typing as tp
 import json
@@ -19,6 +19,7 @@ class WindowConfig(tp.TypedDict):
     appearance_mode: tp.Literal["dark", "light"]
     program_directories: list[str]
     program_ignores: list[str]
+    keyboard: list[tuple[str, str]]
     fullscreen: bool
     theme: str
 
@@ -32,6 +33,11 @@ WINDOW_CONFIG: WindowConfig = {
     "program_ignores": [],
     "theme": "dark-blue",
     "fullscreen": True,
+    "keyboard": [
+        ("s", "s"),
+        ("a", "a"),
+        ("Return", "\n")
+    ]
 }
 
 
@@ -66,14 +72,26 @@ class Window(ctk.CTk):
     """
     main program window
     """
-    running: bool = True
+    __running: bool = True
+
+    __frames: dict[str, tp.Union[RunFrame, SettingsFrame, KeyboardFrame, ControlFrame, ctk.CTkFrame]]
+    _FRAME_SEQUENCE: list[str] = ["Run", "Settings", "Keyboard", "Control"]
+    _keyboard_var: ctk.Variable
 
     def __init__(self) -> None:
         # init parent class
         super().__init__()
 
+        self._keyboard_var = ctk.Variable()
+        self._keyboard_var.set(WINDOW_CONFIG["keyboard"])
+
         self.title("BotUI")
         self.attributes("-fullscreen", WINDOW_CONFIG["fullscreen"])
+        if "-zoomed" in self.attributes():
+            self.attributes("-zoomed", True)
+        else:
+            self.state("zoomed")
+
         self.minsize(500, 300)
 
         # events
@@ -85,9 +103,9 @@ class Window(ctk.CTk):
 
         sb = ctk.CTkSegmentedButton(
             self,
-            values=["Run", "Settings"],
-            font=("Sans-Serif", 30),
-            command=self._change_frame,
+            values=self._FRAME_SEQUENCE,
+            font=("Sans-Serif", 40),
+            command=self._change_frame
         )
         sb._select_button_by_value("Run")
         sb.grid(row=0, column=0, padx=10)
@@ -98,16 +116,15 @@ class Window(ctk.CTk):
             fg_color="#aa3333",
             hover_color="#ff0000",
             command=self.end,
-            font=("Sans-Serif", 30)
+            font=("Sans-Serif", 40)
         ).grid(row=0, column=1)
 
-        self.programs_frame = RunFrame(WINDOW_CONFIG, self, corner_radius=30)
-        self.settings_frame = SettingsFrame(
-            WINDOW_CONFIG,
-            CONFIG_PAH,
-            self,
-            corner_radius=30
-        )
+        self.__frames = {
+            "Run": RunFrame(WINDOW_CONFIG, self._keyboard_var, self, corner_radius=30),
+            "Settings": SettingsFrame(WINDOW_CONFIG, CONFIG_PAH, self, corner_radius=30),
+            "Keyboard": KeyboardFrame(self, WINDOW_CONFIG, CONFIG_PAH, self._keyboard_var, font=("Sans-Serif", 30), corner_radius=30),
+            "Control": ControlFrame(self, font=("Sans-Serif", 30), corner_radius=30)
+        }
 
         self._change_frame("Run")
 
@@ -115,20 +132,11 @@ class Window(ctk.CTk):
         """
         change the currently displayed frame
         """
-        if value == "Run":
-            self.settings_frame.grid_forget()
-            self.programs_frame.grid(
-                row=1,
-                column=0,
-                padx=30,
-                pady=30,
-                sticky="nsew",
-                columnspan=2
-            )
+        for frame in self.__frames:
+            if self.__frames[frame] != self.__frames[value]:
+                self.__frames[frame].grid_forget()
 
-        elif value == "Settings":
-            self.programs_frame.grid_forget()
-            self.settings_frame.grid(
+        self.__frames[value].grid(
                 row=1,
                 column=0,
                 padx=30,
@@ -136,13 +144,14 @@ class Window(ctk.CTk):
                 sticky="nsew",
                 columnspan=2
             )
+        self.__frames[value].focus_force()
 
     def mainloop(self) -> None:
         """
         run the program
         """
-        while self.running:
-            self.programs_frame.update()
+        while self.__running:
+            self.__frames["Run"].update()
             super().update_idletasks()
             super().update()
 
@@ -150,8 +159,11 @@ class Window(ctk.CTk):
         """
         close the program
         """
-        self.running = False
-        self.programs_frame.end()
+        with open(CONFIG_PAH, "w") as out:
+            json.dump(WINDOW_CONFIG, out, indent=4)
+
+        self.__running = False
+        self.__frames["Run"].end()
         self.destroy()
         exit(0)
 
