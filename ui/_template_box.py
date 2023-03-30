@@ -72,7 +72,7 @@ class TemplateBox(CTkFrame):
 
         for but in buttons:
             self.__buttons.append(
-                CTkButton(self, text=but[0], font=self.__font,
+                CTkButton(self, text=but[0], font=self.__font, corner_radius=15,
                           command=lambda k=but[1]: self.press(k), fg_color="#3a7ebf")
             )
 

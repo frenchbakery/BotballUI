@@ -10,8 +10,8 @@ Nilusink
 from concurrent.futures import ThreadPoolExecutor
 from ._term_box import TermBox
 from ._template_box import TemplateBox
+from .kill import get_n_running
 import customtkinter as ctk
-from json import loads
 import typing as tp
 import os
 
@@ -49,7 +49,8 @@ class RunFrame(ctk.CTkFrame):
 
         # ui layout
         self.grid_rowconfigure(0, weight=0)
-        self.grid_rowconfigure(1, weight=1)
+        self.grid_rowconfigure(1, weight=0)
+        self.grid_rowconfigure(2, weight=1)
         self.grid_columnconfigure(0, weight=3)
         self.grid_columnconfigure(1, weight=1)
 
@@ -62,14 +63,6 @@ class RunFrame(ctk.CTkFrame):
             fg_color="#3a7ebf",
             height=100
         )
-        self.program_button.grid(
-            row=0,
-            column=1,
-            sticky="ew",
-            padx=30,
-            pady=10
-        )
-
         # place programs
         self.update_programs()
 
@@ -78,30 +71,59 @@ class RunFrame(ctk.CTkFrame):
             values=list(self.programs.keys()),
             font=("Sans-Serif", 30),
             command=self._select_program,
-            dropdown_font=("Sans-Serif", 30)
+            dropdown_font=("Sans-Serif", 30),
+            height=50
         )
-        self.programs_combo.grid(row=0, column=0, sticky="ew", padx=30)
+
+        self.curr_running_l = ctk.CTkLabel(
+            self,
+            font=("Sans-Serif", 20),
+            text="currently running: 0"
+        )
 
         self.std_out = TermBox(self, font=("Sans-Serif", 20))
+
+        self.std_out_templates = TemplateBox(
+            self,
+            button_var=keyboard,
+            callback=self.std_out.send_key,
+            font=("Sans-Serif", 20),
+            fg_color=self._fg_color
+        )
+
+        self.__grid_widgets()
+
+    def __grid_widgets(self) -> None:
+        # Column 0
+        self.programs_combo.grid(row=0, column=0, sticky="nsew", padx=30, pady=(10, 0))
         self.std_out.grid(
-            row=1,
+            row=2,
             column=0,
             sticky="nsew",
             padx=20,
             pady=20
         )
 
-        self.std_out_templates = TemplateBox(
-            self,
-            button_var=keyboard,
-            callback=self.std_out.send_key,
-            font=("Sans-Serif", 20)
+        self.curr_running_l.grid(
+            row=1,
+            column=0,
+            sticky="nsew",
+            padx=30
+        )
+        # Column 1
+        self.program_button.grid(
+            row=0,
+            rowspan=2,
+            column=1,
+            sticky="ew",
+            padx=30,
+            pady=(10, 0)
         )
         self.std_out_templates.grid(
-            row=1, column=1,
+            row=2, column=1,
             sticky="NSEW",
-            padx=10,
-            pady=20,
+            padx=20,
+            pady=20
         )
 
     def update_programs(self) -> bool:
@@ -155,6 +177,9 @@ class RunFrame(ctk.CTkFrame):
         self.std_out.kill_program()
 
     def update(self) -> None:
+        # update currently running
+        self.curr_running_l.configure(text=f"currently running: {get_n_running()}")
+
         if self.update_programs():
             print("updating: ", list(self.programs.keys()))
             self.programs_combo.configure(values=list(self.programs.keys()))
