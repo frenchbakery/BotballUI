@@ -11,6 +11,7 @@ from ._tk_term_colors import SIMPLE_COLORS, read_color_code
 from concurrent.futures import ThreadPoolExecutor
 from traceback import format_exc
 import customtkinter as ctk
+from tkinter import Event
 from time import sleep
 import typing as tp
 import subprocess
@@ -36,17 +37,14 @@ class TermBox(ctk.CTkTextbox):
     running = True
 
     def __init__(
-            self,
-            *args,
-            proc: tp.Union[subprocess.Popen, None] = None,
+            self, *args, proc: tp.Union[subprocess.Popen, None] = None,
             **kwargs
     ):
         self._running_program = proc
         self._to_insert: list[tuple[str, str]] = []
         self._err_to_insert: list[tuple[str, str]] = []
         self._control_keys = {
-            "ctrl": False,
-            "shift": False
+            "ctrl": False, "shift": False
         }
 
         super().__init__(*args, **kwargs)
@@ -64,6 +62,11 @@ class TermBox(ctk.CTkTextbox):
         # modify binds
         self.bind("<KeyPress>", self._update_stdin)
         self.bind("<KeyRelease>", self._on_key_up)
+
+    def send_key(self, key: str, event: Event) -> None:
+        self.insert("end", key+"\n")
+        self.see("end")
+        self._update_stdin(event)
 
     def _update_stdin(self, event) -> None:
         """
@@ -133,8 +136,8 @@ class TermBox(ctk.CTkTextbox):
         try:
             while self.running:
                 if self._running_program is not None:
-                    self._program_running = \
-                        self._running_program.poll() is None
+                    self._program_running = self._running_program.poll() is \
+                                            None
 
                     byte_char = self._running_program.stdout.read(1)
                     if byte_char:
@@ -144,10 +147,9 @@ class TermBox(ctk.CTkTextbox):
                             )
                             continue
 
-                        self._to_insert.append((
-                            byte_char.decode("utf-8"),
-                            curr_tag
-                        ))
+                        self._to_insert.append(
+                            (byte_char.decode("utf-8"), curr_tag)
+                        )
                         continue
 
                     # only read error messages when
@@ -155,26 +157,21 @@ class TermBox(ctk.CTkTextbox):
                     err_char = self._running_program.stderr.read(1)
                     if err_char:
                         self._err_to_insert.append(
-                            (
-                                err_char.decode("utf-8"),
-                                SIMPLE_COLORS["red"][0]
-                            )
+                            (err_char.decode("utf-8"), SIMPLE_COLORS["red"][0])
                         )
 
                         # read until nothing more to read
                         while err_char := self._running_program.stderr.read(1):
                             self._err_to_insert.append(
-                                (
-                                    err_char.decode("utf-8"),
-                                    SIMPLE_COLORS["red"][0]
-                                )
+                                (err_char.decode("utf-8"),
+                                 SIMPLE_COLORS["red"][0])
                             )
 
                         self._err_to_insert.append(("", ""))  # end code
 
                 # I know python is slow, but believe me,
                 # this does actually make a difference
-                sleep(.0001)
+                sleep(.005)
 
         except Exception:
             print("program exited: ", format_exc())
@@ -188,20 +185,18 @@ class TermBox(ctk.CTkTextbox):
             self._running_program.send_signal(signal.SIGTERM)
 
     def run_program(
-            self,
-            command: str | bytes | os.PathLike[str] | os.PathLike[bytes] |
-            tp.Sequence[str | bytes | os.PathLike[str] | os.PathLike[bytes]]
-            ) -> subprocess.Popen:
+            self, command: tp.Union[
+                str, bytes, os.PathLike[str], os.PathLike[bytes], tp.Sequence[
+                    tp.Union[
+                        str, bytes, os.PathLike[str], os.PathLike[bytes]]]]
+    ) -> subprocess.Popen:
         """
         run a program
         """
         self.delete(0.0, ctk.END)  # clear output texbox
         self._running_program = subprocess.Popen(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            stdin=subprocess.PIPE,
-        )
+            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE, )
         return self._running_program
 
     def _insert_grouped(self, to_insert: list[tuple[str, str]]) -> None:
@@ -236,9 +231,10 @@ class TermBox(ctk.CTkTextbox):
         self._to_insert.clear()
 
         # only insert if a whole error message is present
-        if not (self._program_running or self._to_insert) and \
-                self._err_to_insert and self._err_to_insert[-1][0] == "":
-
+        if not (
+                self._program_running or self._to_insert) and \
+                self._err_to_insert and \
+                self._err_to_insert[-1][0] == "":
             # add newline for better readability
             tmp = [("\n", "")] + self._err_to_insert.copy()[:-1]
             self._insert_grouped(tmp)
